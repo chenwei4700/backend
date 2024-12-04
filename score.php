@@ -1,138 +1,139 @@
 <?php
 session_start();
+if (!isset($_SESSION['account'])) {
+    header("Location: login.php?msg=請先登入");
+    exit();
+}
 
 try {
-    require_once 'db.php'; // 確保這裡是正確的路徑並成功引入
+    require_once 'db.php';
 
-    // 預設搜尋條件
     $searchtxt = isset($_GET['searchtxt']) ? trim($_GET['searchtxt']) : '';
 
-    // 建立 SQL 查詢條件
     $condition = '';
     if (!empty($searchtxt)) {
-        // 避免 SQL 注入
         $searchtxt = mysqli_real_escape_string($conn, $searchtxt);
         $condition = " WHERE teams.team_name LIKE '%$searchtxt%'";
     }
 
-    // 查詢隊伍名稱和總分
     $sql = "
-        SELECT teams.team_name, COALESCE(SUM(scores.score), 0) AS total_score
+        SELECT teams.team_id, teams.team_name, COALESCE(SUM(scores.score), 0) AS total_score
         FROM teams
         LEFT JOIN scores ON scores.team_id = teams.team_id
         $condition
         GROUP BY teams.team_id
+        ORDER BY total_score DESC, teams.team_name ASC
     ";
 
-    // 執行查詢
     $result = mysqli_query($conn, $sql);
     if (!$result) {
         throw new Exception('資料查詢失敗：' . mysqli_error($conn));
     }
 
-    require_once "header.php"; // 確保 header.php 正確引入
+    require_once "iheader.php";
 ?>
-<div class="container mt-3">
-    <div class="d-flex align-items-center justify-content-between">
-        <!-- 搜尋欄 -->
-        <div class="input-group" style="max-width: 400px; margin: auto;">
-            <input 
-                type="text" 
-                class="form-control" 
-                placeholder="請輸入隊伍名稱" 
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>當前比分</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .table th {
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+        }
+        .table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .form-control {
+            border-radius: 20px;
+        }
+        .search-container {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="text-center mb-4">當前比分</h2>
+    <form method="get" action="score.php" class="search-container">
+        <div class="input-group" style="max-width: 400px;">
+            <input
+                type="text"
+                class="form-control"
+                placeholder="請輸入隊伍名稱"
                 name="searchtxt"
                 value="<?= htmlspecialchars($searchtxt) ?>"
             >
-            <button class="btn btn-outline-primary" type="submit">
-                <i class="fas fa-search"></i>
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search"></i> 搜尋
             </button>
         </div>
+    </form>
 
-        <!-- 新增隊伍按鈕 -->
-
-
-    </div>
-
-    <!-- 表格 -->
-    <table class="table table-bordered table-striped mt-4" style="width: 900px; margin: auto;">
+    <table class="table table-bordered table-striped text-center">
         <thead>
             <tr>
                 <th>隊名</th>
                 <th>總分</th>
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            // 顯示查詢結果
             while ($row = mysqli_fetch_assoc($result)) {
+                $team_id = htmlspecialchars($row["team_id"]);
                 $team_name = htmlspecialchars($row["team_name"]);
                 $total_score = htmlspecialchars($row["total_score"]);
-
-                // 如果總分為 0，顯示 -
                 $total_score_display = ($total_score == 0) ? '-' : $total_score;
             ?>
                 <tr>
                     <td><?= $team_name ?></td>
                     <td><?= $total_score_display ?></td>
+                    <td>
+                        <?php if ($_SESSION['role'] === 'M'): ?>
+                            <a href="update_score.php?postid=<?= $team_id ?>" class="btn btn-warning btn-sm">修改</a>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php } ?>
         </tbody>
     </table>
 </div>
-
-
-<div class="modal fade" id="addTeamModal" tabindex="-1" aria-labelledby="addTeamModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addTeamModalLabel">新增隊伍</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="add_team.php">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="teamName" class="form-label">隊伍名稱</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="teamName"
-                            name="team_name"
-                            placeholder="請輸入隊伍名稱"
-                            required
-                        >
-                    </div>
-                    <div id="memberFields">
-                        <div class="mb-3 d-flex align-items-center">
-                            <label for="memberName1" class="form-label">組員姓名</label>
-                            <input
-                                type="text"
-                                class="form-control ms-2"
-                                id="memberName1"
-                                name="member_names[]"
-                                placeholder="請輸入組員姓名"
-                                required
-                            >
-                            <button type="button" class="btn btn-outline-primary ms-2 add-member">
-                                +
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="submit" class="btn btn-outline-success">新增</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 <?php
-    // 關閉資料庫連接
-    mysqli_close($conn); // 使用 mysqli_close 而不是設為 null
+    mysqli_close($conn);
 } catch (Exception $e) {
-    // 捕捉例外並顯示錯誤訊息
-    echo '<div class="alert alert-danger">錯誤訊息：' . htmlspecialchars($e->getMessage()) . '</div>';
+    echo '<div class="alert alert-danger text-center">錯誤訊息：' . htmlspecialchars($e->getMessage()) . '</div>';
 }
 
-require_once "footer.php"; // 確保 footer.php 正確引入
+require_once "footer.php";
 ?>

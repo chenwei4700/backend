@@ -7,7 +7,7 @@
 $servername = "localhost"; // 主機名
 $username = "root"; // 資料庫使用者
 $password = ""; // 資料庫密碼
-$dbname = "後端期末"; // 資料庫名稱
+$dbname = "test"; // 資料庫名稱
 
 // 建立連接
 $conn = new mysqli($servername, $username, $password, $dbname);

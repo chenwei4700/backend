@@ -1,5 +1,18 @@
 <?php
 session_start();
+if (!isset($_SESSION['account'])) {
+    // 用户未登录，跳转到登录页面
+    header("Location: login.php?msg=請先登入");
+    exit();
+}
+
+// 檢查是否為登出
+if (isset($_POST["logout"])) {
+    session_unset(); // 清除所有 session 變數
+    session_destroy(); // 清除 session 資料
+    header("Location: login.php"); // 重新導向登入
+    exit();
+}
 
 try {
     require_once 'db.php'; // 確保這裡是正確的路徑並成功引入
@@ -18,6 +31,7 @@ try {
     // 查詢隊伍名稱和組員名稱
     $sql = "
         SELECT 
+            teams.team_id,
             teams.team_name, 
             GROUP_CONCAT(team_members.member_name SEPARATOR ', ') AS member_names
         FROM teams
@@ -32,7 +46,7 @@ try {
         throw new Exception('資料查詢失敗：' . mysqli_error($conn));
     }
 
-    require_once "header.php"; // 確保 header.php 正確引入
+    require_once "iheader.php"; // 確保 header.php 正確引入
 ?>
 <div class="container mt-3">
     <div class="d-flex align-items-center justify-content-between">
@@ -64,18 +78,28 @@ try {
             <tr>
                 <th>隊名</th>
                 <th>組員</th>
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
             <?php
             // 顯示查詢結果
             while ($row = mysqli_fetch_assoc($result)) {
+                $team_id = htmlspecialchars($row["team_id"]);
                 $team_name = htmlspecialchars($row["team_name"]);
                 $member_names = htmlspecialchars($row["member_names"] ?? '-');
             ?>
                 <tr>
                     <td><?= $team_name ?></td>
                     <td><?= $member_names ?></td>
+                    <td>
+                        <?php if ($_SESSION['role'] === 'M'): ?>
+                            <form action="delete_team.php?delete_id=<?= $team_id ?>" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                            </form>
+                            <a href="update_team.php?postid=<?= $team_id ?>" class="btn btn-warning btn-sm">修改</a>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php } ?>
         </tbody>

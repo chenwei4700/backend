@@ -1,8 +1,7 @@
 <?php
-session_start(); // 確保每次頁面加載時都能讀取 session
 
 
-
+//登入畫面的登入
 ?>
 
 
@@ -38,6 +37,8 @@ session_start(); // 確保每次頁面加載時都能讀取 session
 
 
       </ul>
+
+    
 
       <!-- 登出按鈕 -->
   </nav>
