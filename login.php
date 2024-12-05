@@ -41,7 +41,7 @@ if ($_POST) {
 
         // 檢查密碼是否正確
         if ($row['password'] === $password) {
-          // 如果密碼正確，保存帳號到 session 並跳轉到 fee.php
+          // 如果密碼正確，保存帳號到 session 並跳轉到 score.php
           $_SESSION['account'] = $account;
           $_SESSION['role'] = $row['role'];
 

@@ -93,7 +93,7 @@ try {
                     <td><?= $team_name ?></td>
                     <td><?= $member_names ?></td>
                     <td>
-                        <?php if ($_SESSION['role'] === 'M'): ?>
+                        <?php if ($_SESSION['role'] === 'm'): ?>
                             <form action="delete_team.php?delete_id=<?= $team_id ?>" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-danger btn-sm">刪除</button>
                             </form>

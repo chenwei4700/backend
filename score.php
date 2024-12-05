@@ -117,7 +117,7 @@ try {
                     <td><?= $team_name ?></td>
                     <td><?= $total_score_display ?></td>
                     <td>
-                        <?php if ($_SESSION['role'] === 'M'): ?>
+                        <?php if ($_SESSION['role'] === 'm'): ?>
                             <a href="update_score.php?postid=<?= $team_id ?>" class="btn btn-warning btn-sm">修改</a>
                         <?php endif; ?>
                     </td>

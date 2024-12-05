@@ -1,6 +1,6 @@
 <<?php
 session_start();
-if (!isset($_SESSION['account']) || $_SESSION['role'] !== 'M') {
+if (!isset($_SESSION['account']) || $_SESSION['role'] !== 'm') {
     // 用户未登录或没有权限，跳转到登录页面
     header("Location: login.php?msg=請先登入或沒有權限");
     exit();

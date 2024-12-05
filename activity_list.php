@@ -66,7 +66,7 @@ try {
                         <td><?= htmlspecialchars($row['activity_name']) ?></td>
                         <td><?= htmlspecialchars($row['activity_description']) ?></td>
                         <td>
-                            <?php if ($_SESSION['role'] === 'M'): ?>
+                            <?php if ($_SESSION['role'] === 'm'): ?>
                                 <form action="delete_activity.php?delete_id=<?= htmlspecialchars($row['activity_id']) ?>" method="post" style="display:inline;">
                                     <button type="submit" class="btn btn-danger btn-sm">刪除</button>
                                 </form>
